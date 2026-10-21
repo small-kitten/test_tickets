@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 DB_PATH = "tickets.db"
 class Db:
     def __init__(self):
-        self.connection = sqlite3.connect(DB_PATH)
+        self.connection = sqlite3.connect(DB_PATH, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         self.connection.execute('''
         CREATE TABLE IF NOT EXISTS tickets (
@@ -29,23 +29,25 @@ class Db:
         ).fetchone()
         return dict(row) if row else None
 
-    def create_row(self,data: dict):
+    def create_row(self, data: dict):
         now = datetime.now(timezone.utc).isoformat()
-        self.connection.execute(
+        cur = self.connection.execute(
             "INSERT INTO tickets (problem, author, state, date) VALUES (?, ?, ?, ?)",
-            (data["problem"], data["author"], "New", now),)
+            (data["problem"], data["author"], "New", now),
+        )
         self.connection.commit()
+        return self.get_by_id(cur.lastrowid)
 
-   def update_state(self, ticket_id: int, state: str):
-    existing = self.get_by_id(ticket_id)
-    if existing is None:
-        return None
-    self.connection.execute(
-        "UPDATE tickets SET state = ? WHERE id = ?",
-        (state, ticket_id),
-    )
-    self.connection.commit()
-    return self.get_by_id(ticket_id)
+    def update_state(self, ticket_id: int, state: str):
+        existing = self.get_by_id(ticket_id)
+        if existing is None:
+            return None
+        self.connection.execute(
+            "UPDATE tickets SET state = ? WHERE id = ?",
+            (state, ticket_id),
+        )
+        self.connection.commit()
+        return self.get_by_id(ticket_id)
 
     def close(self):
         if not self._closed:
