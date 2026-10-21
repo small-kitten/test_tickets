@@ -19,7 +19,7 @@ class Db:
         self._closed = False
 
     def read_db(self):
-        db_rows = self.connection.execute("SELECT * FROM tickets").fetchall()
+        db_rows = self.connection.execute("SELECT * FROM tickets ORDER BY id DESC").fetchall()
         return [dict(r) for r in db_rows]
     
     def get_by_id(self, ticket_id: int):
