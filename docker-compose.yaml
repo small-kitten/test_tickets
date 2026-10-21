@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./backend
+    container_name: tickets-backend
+    environment:
+      - DB_PATH=/app/data/tickets.db
+    volumes:
+      - ./backend/data:/app/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: tickets-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
